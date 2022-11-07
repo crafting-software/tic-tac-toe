@@ -20,9 +20,15 @@ defmodule TicTacToe.MixProject do
   def application do
     [
       mod: {TicTacToe.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
+      start_phases: start_phases()
     ]
   end
+
+  defp start_phases(),
+    do: [
+      init_ets_tables: []
+    ]
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -46,7 +52,8 @@ defmodule TicTacToe.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+      {:uuid, "~> 1.1"}
     ]
   end
 

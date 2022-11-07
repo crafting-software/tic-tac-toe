@@ -1,0 +1,9 @@
+<h1 class="mx-auto w-96 text-center mb-10 mt-5 text-5xl text-indigo-600"><%= TicTacToeWeb.GameView.game_status(assigns) %></h1>
+<% flattened_board = List.flatten(@game_session.board) %>
+<div class="grid grid-cols-3 grid-flow-row w-96 mx-auto">
+  <%= for idx <- 0..8 do %>
+    <div class="w-32 h-32 bg-gray-100 hover:bg-gray-200 text-7xl text-gray-600 font-bold pt-7 text-center border-white border-2" phx-click="maybe-select-cell" phx-value-x={rem(idx,3)} phx-value-y={div(idx,3)}>
+        <%= TicTacToeWeb.PageView.symbol_for_player(Enum.at(flattened_board, idx)) %>
+    </div>
+  <% end %>
+</div>

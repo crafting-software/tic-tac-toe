@@ -9,4 +9,7 @@ defmodule TicTacToe.PubSub do
     Phoenix.PubSub.broadcast(TicTacToe.PubSub, topic, {event, result})
     {:ok, result}
   end
+
+  def broadcast(result, topic, event),
+    do: broadcast({:ok, result}, topic, event)
 end

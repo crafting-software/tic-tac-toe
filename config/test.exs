@@ -8,8 +8,7 @@ config :tic_tac_toe, TicTacToeWeb.Endpoint,
   server: false
 
 # In test we don't send emails.
-config :tic_tac_toe, TicTacToe.Mailer,
-  adapter: Swoosh.Adapters.Test
+config :tic_tac_toe, TicTacToe.Mailer, adapter: Swoosh.Adapters.Test
 
 # Print only warnings and errors during test
 config :logger, level: :warn

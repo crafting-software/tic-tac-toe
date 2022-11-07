@@ -1,6 +1,8 @@
 defmodule TicTacToeWeb.Router do
   use TicTacToeWeb, :router
 
+  import TicTacToeWeb.SessionUtils, only: [maybe_create_user_session: 2]
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule TicTacToeWeb.Router do
     plug :put_root_layout, {TicTacToeWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :maybe_create_user_session
   end
 
   pipeline :api do
@@ -18,6 +21,7 @@ defmodule TicTacToeWeb.Router do
     pipe_through :browser
 
     live "/", PageLive.Root, :root
+    live "/game/:game_id", PageLive.Game, :game
   end
 
   # Other scopes may use custom stacks.
