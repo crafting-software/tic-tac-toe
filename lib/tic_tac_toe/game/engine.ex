@@ -26,7 +26,12 @@ defmodule TicTacToe.Game.Engine do
   def join_game(game_id, joining_player) do
     case Storage.find_game_by_id(game_id) do
       {:ok, {_, %State{players: players} = state}} ->
-        if not Enum.member?(players, joining_player) do
+        player_ids =
+          players
+          |> Enum.reject(&is_nil/1)
+          |> Enum.map(& &1.id)
+
+        if not Enum.member?(player_ids, joining_player.id) do
           players =
             Enum.map(players, fn
               nil -> joining_player
@@ -52,7 +57,8 @@ defmodule TicTacToe.Game.Engine do
       ) do
     with {:currently_active_player, active_player} when not is_nil(active_player) <-
            {:currently_active_player, Enum.at(players, active_player_idx)},
-         {:is_current_player?, true} <- {:is_current_player?, current_player === active_player},
+         {:is_current_player?, true} <-
+           {:is_current_player?, current_player.id === active_player.id},
          {:row, row} when is_list(row) <- {:row, Enum.at(board, y)} do
       row =
         Enum.with_index(row, fn

@@ -2,22 +2,28 @@ defmodule TicTacToeWeb.PageLive.Game do
   use TicTacToeWeb, :live_view
 
   alias TicTacToe.Storage
-  alias TicTacToe.Game.Engine
+  alias TicTacToe.Game.{Engine, Player}
   alias TicTacToe.PubSub
 
   @impl true
-  def mount(%{"game_id" => game_id}, %{"player_id" => player_id}, socket) do
+  def mount(
+        %{"game_id" => game_id},
+        %{"player_id" => player_id, "player_name" => player_name},
+        socket
+      ) do
     if connected?(socket), do: PubSub.subscribe("game-state-updates")
+
+    player = %Player{id: player_id, name: player_name}
 
     case Storage.find_game_by_id(game_id) do
       {:ok, {_game_session_id, game}} ->
-        Engine.join_game(game_id, player_id)
+        Engine.join_game(game_id, player)
 
         {
           :ok,
           assign(socket, %{
             game_session: game,
-            player_id: player_id
+            player: player
           })
         }
 
@@ -46,10 +52,10 @@ defmodule TicTacToeWeb.PageLive.Game do
   def handle_event("maybe-select-cell", %{"x" => x, "y" => y}, socket) do
     [x, y] = Enum.map([x, y], &String.to_integer/1)
     game_state = socket.assigns.game_session
-    player_id = socket.assigns.player_id
+    player = socket.assigns.player
 
     if game_state.state == :started do
-      new_game_state = Engine.put_symbol(player_id, game_state, {x, y})
+      new_game_state = Engine.put_symbol(player, game_state, {x, y})
       {:noreply, assign(socket, :game_session, new_game_state)}
     else
       {:noreply, socket}

@@ -1,4 +1,7 @@
 defmodule TicTacToeWeb.Router do
+  alias TicTacToeWeb.PlayerNameController
+  alias TicTacToeWeb.RequirePlayerName
+
   use TicTacToeWeb, :router
 
   import TicTacToeWeb.SessionUtils, only: [maybe_create_user_session: 2]
@@ -17,10 +20,22 @@ defmodule TicTacToeWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :require_player_name do
+    plug RequirePlayerName
+  end
+
+  scope "/" do
+    pipe_through :browser
+    post "/", PlayerNameController, :save_player_name
+  end
+
   scope "/", TicTacToeWeb do
     pipe_through :browser
 
     live "/", PageLive.Root, :root
+
+    pipe_through :require_player_name
+
     live "/game/:game_id", PageLive.Game, :game
   end
 
