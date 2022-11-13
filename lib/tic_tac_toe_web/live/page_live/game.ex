@@ -23,12 +23,12 @@ defmodule TicTacToeWeb.PageLive.Game do
           :ok,
           assign(socket, %{
             game_session: game,
-            player: player
+            player: player,
+            error: nil
           })
         }
 
       _ ->
-        # TODO: Handle case when game is not found.
         {:ok, socket}
     end
   end

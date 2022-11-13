@@ -2,9 +2,12 @@ defmodule TicTacToeWeb.PageLive.Root do
   use TicTacToeWeb, :live_view
 
   alias TicTacToe.Game.{Engine, Player}
+  alias TicTacToeWeb.PageLive.{SetPlayerNameModal, JoinGameModal}
 
   @impl true
   def mount(_params, session, socket) do
+    player_name = session["player_name"]
+
     {
       :ok,
       assign(
@@ -12,9 +15,13 @@ defmodule TicTacToeWeb.PageLive.Root do
         %{
           player: %Player{
             id: session["player_id"],
-            name: session["player_name"]
+            name: player_name
           },
-          show_set_player_name_modal: false
+          modal_component:
+            if(is_nil(player_name),
+              do: {SetPlayerNameModal, %{player_name: player_name}},
+              else: {nil, %{}}
+            )
         }
       )
     }
@@ -31,10 +38,38 @@ defmodule TicTacToeWeb.PageLive.Root do
   end
 
   @impl true
-  def handle_event("toggle-set-player-name-modal", _params, socket) do
+  def handle_event("show-set-player-name-modal", _params, socket) do
     {
       :noreply,
-      assign(socket, :show_set_player_name_modal, true)
+      assign(
+        socket,
+        :modal_component,
+        {SetPlayerNameModal, %{player_name: socket.assigns.player.name}}
+      )
+    }
+  end
+
+  @impl true
+  def handle_event("show-join-game-modal", _params, socket) do
+    {
+      :noreply,
+      assign(
+        socket,
+        :modal_component,
+        {JoinGameModal, %{game_id: nil, id: "join-game-form", error: nil}}
+      )
+    }
+  end
+
+  @impl true
+  def handle_event("dismiss-modal", _, socket) do
+    {
+      :noreply,
+      assign(
+        socket,
+        :modal_component,
+        {nil, %{}}
+      )
     }
   end
 end
