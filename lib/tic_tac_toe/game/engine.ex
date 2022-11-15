@@ -39,7 +39,12 @@ defmodule TicTacToe.Game.Engine do
             end)
 
           new_state = %{state | players: players, state: :started}
-          PubSub.broadcast(Storage.save_session(new_state), "game-state-updates", :player_joined)
+
+          PubSub.broadcast(
+            Storage.save_session(new_state),
+            "game-state-updates:#{game_id}",
+            :player_joined
+          )
         else
           {:ok, state}
         end
@@ -89,7 +94,12 @@ defmodule TicTacToe.Game.Engine do
   end
 
   defp resolve_state(
-         %State{board: board, turns: turns, active_player_idx: active_player_idx} = state
+         %State{
+           session_id: game_id,
+           board: board,
+           turns: turns,
+           active_player_idx: active_player_idx
+         } = state
        ) do
     result =
       {:in_progress, board}
@@ -100,7 +110,7 @@ defmodule TicTacToe.Game.Engine do
     with {:result, {:in_progress, _board}} <- {:result, result},
          {:turns, 9} <- {:turns, turns} do
       new_state = %{state | state: {:finished, :draw}}
-      PubSub.broadcast(new_state, "game-state-updates", :game_finished)
+      PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :game_finished)
       new_state
     else
       # Case when less than 9 turns have passed and no player won.
@@ -108,13 +118,13 @@ defmodule TicTacToe.Game.Engine do
       # therefore the game can continue unless a player claims victory.
       {:turns, _} ->
         new_state = %{state | active_player_idx: rem(active_player_idx + 1, 2)}
-        PubSub.broadcast(new_state, "game-state-updates", :player_turn_passed)
+        PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :player_turn_passed)
         new_state
 
       # Case when a player claims victory.
       {:result, {:finished, winner}} ->
         new_state = %{state | state: {:finished, winner}}
-        PubSub.broadcast(new_state, "game-state-updates", :game_finished)
+        PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :game_finished)
         new_state
     end
   end

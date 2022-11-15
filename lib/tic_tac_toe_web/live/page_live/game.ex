@@ -11,7 +11,7 @@ defmodule TicTacToeWeb.PageLive.Game do
         %{"player_id" => player_id, "player_name" => player_name},
         socket
       ) do
-    if connected?(socket), do: PubSub.subscribe("game-state-updates")
+    if connected?(socket), do: PubSub.subscribe("game-state-updates:#{game_id}")
 
     player = %Player{id: player_id, name: player_name}
 
