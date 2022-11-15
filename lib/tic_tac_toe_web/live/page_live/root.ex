@@ -5,18 +5,13 @@ defmodule TicTacToeWeb.PageLive.Root do
   alias TicTacToeWeb.PageLive.{SetPlayerNameModal, JoinGameModal}
 
   @impl true
-  def mount(_params, session, socket) do
-    player_name = session["player_name"]
-
+  def mount(_params, %{"player" => %Player{id: _, name: player_name} = player}, socket) do
     {
       :ok,
       assign(
         socket,
         %{
-          player: %Player{
-            id: session["player_id"],
-            name: player_name
-          },
+          player: player,
           modal_component:
             if(is_nil(player_name),
               do: {SetPlayerNameModal, %{player_name: player_name}},

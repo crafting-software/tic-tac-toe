@@ -8,12 +8,10 @@ defmodule TicTacToeWeb.PageLive.Game do
   @impl true
   def mount(
         %{"game_id" => game_id},
-        %{"player_id" => player_id, "player_name" => player_name},
+        %{"player" => %Player{} = player},
         socket
       ) do
     if connected?(socket), do: PubSub.subscribe("game-state-updates:#{game_id}")
-
-    player = %Player{id: player_id, name: player_name}
 
     case Storage.find_game_by_id(game_id) do
       {:ok, {_game_session_id, game}} ->
