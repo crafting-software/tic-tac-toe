@@ -1,8 +1,7 @@
 defmodule TicTacToeWeb.PageLive.Game do
   use TicTacToeWeb, :live_view
 
-  alias TicTacToe.Storage
-  alias TicTacToe.Game.{Engine, Player}
+  alias TicTacToe.Game.{Engine, Player, Session}
   alias TicTacToe.PubSub
 
   @impl true
@@ -13,7 +12,7 @@ defmodule TicTacToeWeb.PageLive.Game do
       ) do
     if connected?(socket), do: PubSub.subscribe("game-state-updates:#{game_id}")
 
-    case Storage.find_game_by_id(game_id) do
+    case Session.get_by_id(game_id) do
       {:ok, {_game_session_id, game}} ->
         Engine.join_game(game_id, player)
 

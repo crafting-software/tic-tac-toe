@@ -1,6 +1,7 @@
 defmodule TicTacToe.Storage do
   @tables [
-    {:game_sessions, :set}
+    {:game_sessions, :set},
+    {:players, :set}
   ]
 
   def init_tables(),
@@ -9,17 +10,20 @@ defmodule TicTacToe.Storage do
         :ets.new(table, [type, :public, :named_table])
       end)
 
-  def find_game_by_id(game_id) do
-    case :ets.lookup(:game_sessions, game_id) do
-      [game] -> {:ok, game}
+  def get_by_id(table, id) do
+    case :ets.lookup(table, id) do
+      [entity] -> {:ok, entity}
       [] -> {:error, :not_found}
     end
   end
 
-  def save_session(session) do
-    case :ets.insert(:game_sessions, {session.session_id, session}) do
-      true -> {:ok, session}
+  def save(table, {id, data}) do
+    case :ets.insert(table, {id, data}) do
+      true -> {:ok, data}
       _ -> :error
     end
   end
+
+  def get_all(table, pattern \\ :"$1"),
+    do: List.flatten(:ets.match(table, pattern))
 end

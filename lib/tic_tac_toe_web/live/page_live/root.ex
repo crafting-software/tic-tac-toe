@@ -2,16 +2,23 @@ defmodule TicTacToeWeb.PageLive.Root do
   use TicTacToeWeb, :live_view
 
   alias TicTacToe.Game.{Engine, Player}
+  alias TicTacToe.PubSub
   alias TicTacToeWeb.PageLive.{SetPlayerNameModal, JoinGameModal}
+  alias TicTacToeWeb.SessionUtils
 
   @impl true
-  def mount(_params, %{"player" => %Player{id: _, name: player_name} = player}, socket) do
+  def mount(_params, %{"player" => %Player{id: id, name: player_name} = player}, socket) do
+    {:ok, player} = Player.merge_and_save(id, SessionUtils.to_user_session_params(player))
+
+    if connected?(socket), do: PubSub.subscribe("leaderboard-updates")
+
     {
       :ok,
       assign(
         socket,
         %{
           player: player,
+          leaderboard_players: Player.get_leaderboard_players(),
           modal_component:
             if(is_nil(player_name),
               do: {SetPlayerNameModal, %{player_name: player_name}},
@@ -20,6 +27,11 @@ defmodule TicTacToeWeb.PageLive.Root do
         }
       )
     }
+  end
+
+  @impl true
+  def handle_info({:leaderboard_update, _}, socket) do
+    {:noreply, assign(socket, :leaderboard_players, Player.get_leaderboard_players())}
   end
 
   @impl true

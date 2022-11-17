@@ -1,7 +1,9 @@
-defmodule TicTacToe.Game.State do
+defmodule TicTacToe.Game.Session do
+  alias TicTacToe.Storage
+
   defstruct [
     # The ID of the game session.
-    session_id: nil,
+    id: nil,
     # List of joined players.
     players: [nil, nil],
     # The player whose current turn is.
@@ -13,4 +15,12 @@ defmodule TicTacToe.Game.State do
     # Turns passed so far
     turns: 0
   ]
+
+  @table :game_sessions
+
+  def get_by_id(id),
+    do: Storage.get_by_id(@table, id)
+
+  def save(id, data),
+    do: Storage.save(@table, {id, data})
 end

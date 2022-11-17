@@ -13,4 +13,14 @@ defmodule TicTacToeWeb.SessionUtils do
         put_session(conn, "player", %Player{id: UUID.uuid4()})
     end
   end
+
+  @doc """
+  Only keeps the fields that should be saved into
+  the session.
+  """
+  def to_user_session_params(%Player{} = player),
+    do:
+      player
+      |> Map.from_struct()
+      |> Map.take(~w[id name]a)
 end

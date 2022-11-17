@@ -1,13 +1,13 @@
 defmodule TicTacToe.Game.Engine do
-  alias TicTacToe.Game.State
-  alias TicTacToe.Storage
+  alias TicTacToe.Game.Session, as: GameSession
+  alias TicTacToe.Game.{Player, Stats}
   alias TicTacToe.PubSub
 
   require Logger
 
   def new_game(owner) do
-    state = %State{
-      session_id: generate_session_id(),
+    state = %GameSession{
+      id: generate_new_game_id(),
       players: [owner, nil],
       active_player_idx: 0,
       turns: 0,
@@ -15,17 +15,17 @@ defmodule TicTacToe.Game.Engine do
       board: init_board()
     }
 
-    :ets.insert(:game_sessions, {state.session_id, state})
+    GameSession.save(state.id, state)
 
-    {:ok, {state.session_id, state}}
+    {:ok, {state.id, state}}
   end
 
-  def active_player(%State{active_player_idx: idx, players: players}),
+  def active_player(%GameSession{active_player_idx: idx, players: players}),
     do: Enum.at(players, idx)
 
   def join_game(game_id, joining_player) do
-    case Storage.find_game_by_id(game_id) do
-      {:ok, {_, %State{players: players} = state}} ->
+    case GameSession.get_by_id(game_id) do
+      {:ok, {_, %GameSession{players: players} = state}} ->
         player_ids =
           players
           |> Enum.reject(&is_nil/1)
@@ -41,7 +41,7 @@ defmodule TicTacToe.Game.Engine do
           new_state = %{state | players: players, state: :started}
 
           PubSub.broadcast(
-            Storage.save_session(new_state),
+            GameSession.save(game_id, new_state),
             "game-state-updates:#{game_id}",
             :player_joined
           )
@@ -56,8 +56,13 @@ defmodule TicTacToe.Game.Engine do
 
   def put_symbol(
         current_player,
-        %State{board: board, active_player_idx: active_player_idx, players: players, turns: turns} =
-          state,
+        %GameSession{
+          id: game_id,
+          board: board,
+          active_player_idx: active_player_idx,
+          players: players,
+          turns: turns
+        } = state,
         {x, y} = _pos
       ) do
     with {:currently_active_player, active_player} when not is_nil(active_player) <-
@@ -78,9 +83,7 @@ defmodule TicTacToe.Game.Engine do
         end)
 
       {:ok, result} =
-        %{state | board: board, turns: turns + 1}
-        |> resolve_state()
-        |> Storage.save_session()
+        GameSession.save(game_id, resolve_state(%{state | board: board, turns: turns + 1}))
 
       result
     else
@@ -94,10 +97,11 @@ defmodule TicTacToe.Game.Engine do
   end
 
   defp resolve_state(
-         %State{
-           session_id: game_id,
+         %GameSession{
+           id: game_id,
            board: board,
            turns: turns,
+           players: players,
            active_player_idx: active_player_idx
          } = state
        ) do
@@ -122,9 +126,11 @@ defmodule TicTacToe.Game.Engine do
         new_state
 
       # Case when a player claims victory.
-      {:result, {:finished, winner}} ->
-        new_state = %{state | state: {:finished, winner}}
+      {:result, {:finished, winner_idx}} ->
+        new_state = %{state | state: {:finished, winner_idx}}
+        Stats.update(new_state)
         PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :game_finished)
+        PubSub.broadcast([], "leaderboard-updates", :leaderboard_update)
         new_state
     end
   end
@@ -161,7 +167,7 @@ defmodule TicTacToe.Game.Engine do
 
   defp resolve_columns({:finished, x}), do: {:finished, x}
 
-  defp generate_session_id(),
+  defp generate_new_game_id(),
     do:
       ?A..?Z
       |> Enum.take_random(5)

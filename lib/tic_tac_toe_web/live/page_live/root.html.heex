@@ -24,6 +24,33 @@
       <%= if not is_nil(@player.name) do %>
         <p class="mt-10">Playing as <span class="font-bold"><%= @player.name %></span> <a href="#" class="font-italic text-indigo-600" phx-click="show-set-player-name-modal">(click to change)</a></p>
       <% end %>
+
+      <br/>
+      <br/>
+
+      <p class="mt-2 text-3xl font-bold leading-8 tracking-tight text-gray-900 sm:text-4xl">Leaderboard</p>
+
+      <table class="mx-auto">
+        <thead>
+          <tr>
+            <th class="px-1">Place</th>
+            <th class="px-1">Name</th>
+            <th class="px-1">Wins</th>
+            <th class="px-1">Losses</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <%= for {{_, player}, idx} <- Enum.with_index(@leaderboard_players) do %>
+            <tr class={if player.id == @player.id, do: "bg-green-400"}>
+              <td><%= idx + 1 %></td>
+              <td><%= player.name %></td>
+              <td><%= player.stats.wins %></td>
+              <td><%= player.stats.losses %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

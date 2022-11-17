@@ -1,6 +1,5 @@
 defmodule TicTacToe.Validation.Game do
-  alias TicTacToe.Game.State
-  alias TicTacToe.Storage
+  alias TicTacToe.Game.Session, as: GameSession
 
   @doc """
   Validates the format of the game_id.
@@ -32,8 +31,8 @@ defmodule TicTacToe.Validation.Game do
     do: {:error, msg}
 
   def validate_join(game_id) do
-    with {:game, {:ok, {_, %State{session_id: ^game_id, players: players}}}} <-
-           {:game, Storage.find_game_by_id(game_id)},
+    with {:game, {:ok, {_, %GameSession{id: ^game_id, players: players}}}} <-
+           {:game, GameSession.get_by_id(game_id)},
          {:can_join?, true} <- {:can_join?, Enum.member?(players, nil)} do
       {:ok, game_id}
     else
