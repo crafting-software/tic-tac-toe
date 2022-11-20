@@ -1,8 +1,12 @@
 defmodule TicTacToe.Storage do
   @tables [
     {:game_sessions, :set},
-    {:players, :set}
+    {:players, :set},
+    {:challenges, :set}
   ]
+
+  defp unwrap({_, data}), do: data
+  defp unwrap(data), do: data
 
   def init_tables(),
     do:
@@ -12,7 +16,7 @@ defmodule TicTacToe.Storage do
 
   def get_by_id(table, id) do
     case :ets.lookup(table, id) do
-      [entity] -> {:ok, entity}
+      [{_, entity}] -> {:ok, entity}
       [] -> {:error, :not_found}
     end
   end
@@ -25,5 +29,9 @@ defmodule TicTacToe.Storage do
   end
 
   def get_all(table, pattern \\ :"$1"),
-    do: List.flatten(:ets.match(table, pattern))
+    do:
+      table
+      |> :ets.match(pattern)
+      |> List.flatten()
+      |> Enum.map(&unwrap/1)
 end

@@ -1,4 +1,4 @@
-<div class="bg-white py-12 mx-auto fixed w-screen">
+<div class="bg-white py-12 mx-auto fixed w-screen h-screen overflow-y-auto">
   <div class="justify-center max-w-12xl px-4 sm:px-6 lg:px-12">
     <div class="text-center">
       <h2 class="text-lg font-semibold text-indigo-600">By CraftingSoftware</h2>
@@ -30,27 +30,10 @@
 
       <p class="mt-2 text-3xl font-bold leading-8 tracking-tight text-gray-900 sm:text-4xl">Leaderboard</p>
 
-      <table class="mx-auto">
-        <thead>
-          <tr>
-            <th class="px-1">Place</th>
-            <th class="px-1">Name</th>
-            <th class="px-1">Wins</th>
-            <th class="px-1">Losses</th>
-          </tr>
-        </thead>
+      <%= live_component(TicTacToeWeb.PageLive.Leaderboard, %{player: @player, leaderboard_players: @leaderboard_players, challenges: @challenges}) %>
 
-        <tbody>
-          <%= for {{_, player}, idx} <- Enum.with_index(@leaderboard_players) do %>
-            <tr class={if player.id == @player.id, do: "bg-green-400"}>
-              <td><%= idx + 1 %></td>
-              <td><%= player.name %></td>
-              <td><%= player.stats.wins %></td>
-              <td><%= player.stats.losses %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+      <p class="mt-2 text-3xl font-bold leading-8 tracking-tight text-gray-900 sm:text-4xl">Challenges</p>
+      <%= live_component(TicTacToeWeb.PageLive.ChallengesList, %{player: @player, challenges: @challenges}) %>
     </div>
   </div>
 </div>
@@ -59,5 +42,5 @@
   <% {nil, _} -> %>
     <%= nil %>
   <% {type, assigns} -> %>
-    <%=  live_component(type, assigns) %>
+    <%= live_component(type, assigns) %>
 <% end %>

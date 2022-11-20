@@ -1,3 +1,4 @@
+<span class="text-7xl p-3" phx-click="leave-game" data-confirm="Are you sure you want to leave the game?">←</span>
 <h1 class="mx-auto w-96 text-center mb-10 mt-5 text-5xl text-indigo-600"><%= TicTacToeWeb.GameView.game_status(assigns) %></h1>
 <% flattened_board = List.flatten(@game_session.board) %>
 <div class="grid grid-cols-3 grid-flow-row w-96 mx-auto">

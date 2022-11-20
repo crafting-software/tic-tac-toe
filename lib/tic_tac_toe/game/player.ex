@@ -17,7 +17,7 @@ defmodule TicTacToe.Game.Player do
 
   def merge_and_save(id, data) do
     case get_by_id(id) do
-      {:ok, {_, player}} ->
+      {:ok, player} ->
         updated_player = Map.merge(player, data)
         save(id, updated_player)
 
@@ -26,19 +26,20 @@ defmodule TicTacToe.Game.Player do
     end
   end
 
-  def get_all(),
+  def get_all(filter \\ fn _ -> true end),
     do:
       @table
       |> Storage.get_all()
-      |> Enum.map(fn {id, entry} ->
-        {id, %{entry | stats: Stats.get_stats(entry)}}
+      |> Enum.filter(filter)
+      |> Enum.map(fn entry ->
+        %{entry | stats: Stats.get_stats(entry)}
       end)
 
   def get_leaderboard_players(),
     do:
       get_all()
-      |> Enum.filter(fn {_, %{name: name}} -> not is_nil(name) end)
-      |> Enum.sort_by(fn {_, %{stats: %{wins: wins, losses: losses}}} ->
+      |> Enum.filter(fn %{name: name} -> not is_nil(name) end)
+      |> Enum.sort_by(fn %{stats: %{wins: wins, losses: losses}} ->
         losses - wins
       end)
 end

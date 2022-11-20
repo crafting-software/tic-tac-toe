@@ -31,9 +31,9 @@ defmodule TicTacToe.Validation.Game do
     do: {:error, msg}
 
   def validate_join(game_id) do
-    with {:game, {:ok, {_, %GameSession{id: ^game_id, players: players}}}} <-
+    with {:game, {:ok, %GameSession{id: ^game_id, player_ids: player_ids}}} <-
            {:game, GameSession.get_by_id(game_id)},
-         {:can_join?, true} <- {:can_join?, Enum.member?(players, nil)} do
+         {:can_join?, true} <- {:can_join?, Enum.member?(player_ids, nil)} do
       {:ok, game_id}
     else
       {:game, {:error, :not_found}} -> {:error, "Game not found"}

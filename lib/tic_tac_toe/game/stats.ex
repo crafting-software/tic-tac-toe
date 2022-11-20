@@ -12,7 +12,7 @@ defmodule TicTacToe.Game.Stats do
 
   def save(player_id, type) when type in [:win, :loss] do
     case Player.get_by_id(player_id) do
-      {:ok, {_, %Player{} = player}} ->
+      {:ok, %Player{} = player} ->
         stats = get_stats(player)
 
         updated_stats =

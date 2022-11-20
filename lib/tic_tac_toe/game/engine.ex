@@ -1,4 +1,5 @@
 defmodule TicTacToe.Game.Engine do
+  alias TicTacToe.Game.Challenge
   alias TicTacToe.Game.Session, as: GameSession
   alias TicTacToe.Game.{Player, Stats}
   alias TicTacToe.PubSub
@@ -8,7 +9,7 @@ defmodule TicTacToe.Game.Engine do
   def new_game(owner) do
     state = %GameSession{
       id: generate_new_game_id(),
-      players: [owner, nil],
+      player_ids: [owner, nil],
       active_player_idx: 0,
       turns: 0,
       state: :waiting,
@@ -16,32 +17,42 @@ defmodule TicTacToe.Game.Engine do
     }
 
     GameSession.save(state.id, state)
-
-    {:ok, {state.id, state}}
   end
 
-  def active_player(%GameSession{active_player_idx: idx, players: players}),
-    do: Enum.at(players, idx)
+  def new_game(owner, other_player, challenge_id) do
+    state = %GameSession{
+      id: generate_new_game_id(),
+      player_ids: [owner, other_player],
+      active_player_idx: 0,
+      turns: 0,
+      state: :started,
+      board: init_board(),
+      challenge_id: challenge_id
+    }
+
+    GameSession.save(state.id, state)
+  end
+
+  def active_player(%GameSession{active_player_idx: idx, player_ids: player_ids}),
+    do: Enum.at(player_ids, idx)
 
   def join_game(game_id, joining_player) do
     case GameSession.get_by_id(game_id) do
-      {:ok, {_, %GameSession{players: players} = state}} ->
-        player_ids =
-          players
-          |> Enum.reject(&is_nil/1)
-          |> Enum.map(& &1.id)
-
-        if not Enum.member?(player_ids, joining_player.id) do
-          players =
-            Enum.map(players, fn
+      {:ok, %GameSession{player_ids: player_ids} = state} ->
+        if not Enum.member?(player_ids, joining_player) do
+          player_ids =
+            Enum.map(player_ids, fn
               nil -> joining_player
               player -> player
             end)
 
-          new_state = %{state | players: players, state: :started}
+          {:ok, new_state} =
+            GameSession.save(game_id, %{state | player_ids: player_ids, state: :started})
+
+          new_state = GameSession.load_player_data(new_state)
 
           PubSub.broadcast(
-            GameSession.save(game_id, new_state),
+            new_state,
             "game-state-updates:#{game_id}",
             :player_joined
           )
@@ -60,15 +71,15 @@ defmodule TicTacToe.Game.Engine do
           id: game_id,
           board: board,
           active_player_idx: active_player_idx,
-          players: players,
+          player_ids: player_ids,
           turns: turns
         } = state,
         {x, y} = _pos
       ) do
     with {:currently_active_player, active_player} when not is_nil(active_player) <-
-           {:currently_active_player, Enum.at(players, active_player_idx)},
+           {:currently_active_player, Enum.at(player_ids, active_player_idx)},
          {:is_current_player?, true} <-
-           {:is_current_player?, current_player.id === active_player.id},
+           {:is_current_player?, current_player === active_player},
          {:row, row} when is_list(row) <- {:row, Enum.at(board, y)} do
       row =
         Enum.with_index(row, fn
@@ -101,7 +112,7 @@ defmodule TicTacToe.Game.Engine do
            id: game_id,
            board: board,
            turns: turns,
-           players: players,
+           challenge_id: challenge_id,
            active_player_idx: active_player_idx
          } = state
        ) do
@@ -114,6 +125,7 @@ defmodule TicTacToe.Game.Engine do
     with {:result, {:in_progress, _board}} <- {:result, result},
          {:turns, 9} <- {:turns, turns} do
       new_state = %{state | state: {:finished, :draw}}
+      Challenge.update_challenge_status(challenge_id, nil)
       PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :game_finished)
       new_state
     else
@@ -129,6 +141,7 @@ defmodule TicTacToe.Game.Engine do
       {:result, {:finished, winner_idx}} ->
         new_state = %{state | state: {:finished, winner_idx}}
         Stats.update(new_state)
+        Challenge.update_challenge_status(challenge_id, active_player(new_state))
         PubSub.broadcast(new_state, "game-state-updates:#{game_id}", :game_finished)
         PubSub.broadcast([], "leaderboard-updates", :leaderboard_update)
         new_state

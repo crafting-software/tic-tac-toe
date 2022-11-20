@@ -13,13 +13,13 @@ defmodule TicTacToeWeb.PageLive.Game do
     if connected?(socket), do: PubSub.subscribe("game-state-updates:#{game_id}")
 
     case Session.get_by_id(game_id) do
-      {:ok, {_game_session_id, game}} ->
-        Engine.join_game(game_id, player)
+      {:ok, game} ->
+        Engine.join_game(game_id, player.id)
 
         {
           :ok,
           assign(socket, %{
-            game_session: game,
+            game_session: Session.load_player_data(game),
             player: player,
             error: nil
           })
@@ -52,10 +52,18 @@ defmodule TicTacToeWeb.PageLive.Game do
     player = socket.assigns.player
 
     if game_state.state == :started do
-      new_game_state = Engine.put_symbol(player, game_state, {x, y})
+      new_game_state = Engine.put_symbol(player.id, game_state, {x, y})
       {:noreply, assign(socket, :game_session, new_game_state)}
     else
       {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_event("leave-game", _, socket) do
+    {
+      :noreply,
+      push_redirect(socket, to: "/")
+    }
   end
 end

@@ -1,7 +1,7 @@
 defmodule TicTacToeWeb.PageLive.Root do
   use TicTacToeWeb, :live_view
 
-  alias TicTacToe.Game.{Engine, Player}
+  alias TicTacToe.Game.{Engine, Player, Session, Challenge}
   alias TicTacToe.PubSub
   alias TicTacToeWeb.PageLive.{SetPlayerNameModal, JoinGameModal}
   alias TicTacToeWeb.SessionUtils
@@ -10,7 +10,10 @@ defmodule TicTacToeWeb.PageLive.Root do
   def mount(_params, %{"player" => %Player{id: id, name: player_name} = player}, socket) do
     {:ok, player} = Player.merge_and_save(id, SessionUtils.to_user_session_params(player))
 
-    if connected?(socket), do: PubSub.subscribe("leaderboard-updates")
+    if connected?(socket) do
+      PubSub.subscribe("leaderboard-updates")
+      PubSub.subscribe("player-challenges:#{id}")
+    end
 
     {
       :ok,
@@ -19,6 +22,7 @@ defmodule TicTacToeWeb.PageLive.Root do
         %{
           player: player,
           leaderboard_players: Player.get_leaderboard_players(),
+          challenges: get_personal_challenges(id),
           modal_component:
             if(is_nil(player_name),
               do: {SetPlayerNameModal, %{player_name: player_name}},
@@ -35,8 +39,13 @@ defmodule TicTacToeWeb.PageLive.Root do
   end
 
   @impl true
+  def handle_info({:challenge_issued, challenge}, socket) do
+    {:noreply, assign(socket, :challenges, [challenge | socket.assigns.challenges])}
+  end
+
+  @impl true
   def handle_event("new-game", _params, socket) do
-    {:ok, {game_id, _}} = Engine.new_game(socket.assigns.player)
+    {:ok, %Session{id: game_id}} = Engine.new_game(socket.assigns.player.id)
 
     {
       :noreply,
@@ -79,4 +88,38 @@ defmodule TicTacToeWeb.PageLive.Root do
       )
     }
   end
+
+  @impl true
+  def handle_event("issue-challenge", %{"opponent-id" => opponent_id}, socket) do
+    current_player_id = socket.assigns.player.id
+    # {:ok, %Session{id: session_id}} =
+    #   Engine.new_game(current_player_id, opponent_id)
+
+    # Session.save(UUID.uuid4(), %Session{players: [current_player_id, opponent_id]})
+    {:ok, %Challenge{id: _challenge_id} = challenge} =
+      Challenge.create({current_player_id, opponent_id})
+
+    {
+      :noreply,
+      assign(socket, :challenges, [challenge | socket.assigns.challenges])
+    }
+  end
+
+  @impl true
+  def handle_event(
+        "join-challenge",
+        %{"game-id" => game_id, "challenge-id" => challenge_id},
+        socket
+      ) do
+    {:noreply, push_redirect(socket, to: "/game/#{game_id}?challenge_id=#{challenge_id}")}
+  end
+
+  defp get_personal_challenges(current_player_id),
+    do:
+      Challenge.get_all(fn %Challenge{
+                             issuer_id: challenge_issuer_id,
+                             opponent_id: challenge_opponent_id
+                           } ->
+        challenge_issuer_id == current_player_id or challenge_opponent_id == current_player_id
+      end)
 end
