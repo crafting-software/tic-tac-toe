@@ -13,6 +13,7 @@ defmodule TicTacToeWeb.PageLive.Root do
     if connected?(socket) do
       PubSub.subscribe("leaderboard-updates")
       PubSub.subscribe("player-challenges:#{id}")
+      PubSub.subscribe("player-updates")
     end
 
     {
@@ -36,6 +37,38 @@ defmodule TicTacToeWeb.PageLive.Root do
   @impl true
   def handle_info({:leaderboard_update, _}, socket) do
     {:noreply, assign(socket, :leaderboard_players, Player.get_leaderboard_players())}
+  end
+
+  @impl true
+  def handle_info({:name_set, player}, socket) do
+    %Player{id: player_id, name: _player_name} = player
+    %{leaderboard_players: leaderboard, challenges: challenges} = socket.assigns
+
+    {
+      :noreply,
+      assign(
+        socket,
+        %{
+          leaderboard_players:
+            [player | leaderboard]
+            |> Enum.uniq_by(& &1.id)
+            |> Enum.sort_by(&(&1.stats.losses - &1.stats.wins)),
+          challenges:
+            Enum.map(challenges, fn challenge ->
+              case challenge do
+                %{issuer: %{id: ^player_id}} = challenge ->
+                  %{challenge | issuer: player}
+
+                %{opponent: %{id: ^player_id}} = challenge ->
+                  %{challenge | opponent: player}
+
+                other ->
+                  other
+              end
+            end)
+        }
+      )
+    }
   end
 
   @impl true
@@ -92,10 +125,7 @@ defmodule TicTacToeWeb.PageLive.Root do
   @impl true
   def handle_event("issue-challenge", %{"opponent-id" => opponent_id}, socket) do
     current_player_id = socket.assigns.player.id
-    # {:ok, %Session{id: session_id}} =
-    #   Engine.new_game(current_player_id, opponent_id)
 
-    # Session.save(UUID.uuid4(), %Session{players: [current_player_id, opponent_id]})
     {:ok, %Challenge{id: _challenge_id} = challenge} =
       Challenge.create({current_player_id, opponent_id})
 
