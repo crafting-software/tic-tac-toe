@@ -122,3 +122,7 @@
   100% { opacity: 0; }
 }
 
+.square {
+  width: 50%;
+  padding-bottom: 50%;
+}

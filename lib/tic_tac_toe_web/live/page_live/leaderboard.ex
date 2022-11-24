@@ -3,7 +3,7 @@ defmodule TicTacToeWeb.PageLive.Leaderboard do
 
   def render(assigns) do
     ~H"""
-      <div class="mx-auto w-4/12 p-4 bg-white border rounded-lg shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700">
+      <div class="mx-auto lg:w-4/12 md:w-full sm:w-full p-4 bg-white border rounded-lg shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-center justify-between mb-4">
               <h5 class="mx-auto text-xl font-bold leading-none text-gray-900 dark:text-white">Leaderbord</h5>
         </div>
