@@ -5,7 +5,7 @@ defmodule TicTacToeWeb.PageLive.Leaderboard do
     ~H"""
       <div class="mx-auto w-4/12 p-4 bg-white border rounded-lg shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-center justify-between mb-4">
-              <h5 class="mx-auto text-xl font-bold leading-none text-gray-900 dark:text-white">Leaderbord</h5>
+              <h5 class="mx-auto text-xl font-bold leading-none text-gray-900 dark:text-white">Leaderboard</h5>
         </div>
         <div class="flow-root">
           <table class="w-full mx-auto text-sm text-left text-gray-500 dark:text-gray-400">

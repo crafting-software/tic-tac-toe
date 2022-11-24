@@ -40,10 +40,6 @@ defmodule TicTacToe.Game.Challenge do
     }
 
     {:ok, result} = save(challenge_id, challenge)
-    # {:ok, %Session{id: _game_id}} = Session.save(UUID.uuid4(), %Session{
-    #   players: [],
-    #   challenge_id: challenge_id
-    # })
     PubSub.broadcast(result, "player-challenges:#{opponent_id}", :challenge_issued)
     {:ok, result}
   end
