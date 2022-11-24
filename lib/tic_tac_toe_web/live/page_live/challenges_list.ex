@@ -3,7 +3,7 @@ defmodule TicTacToeWeb.PageLive.ChallengesList do
 
   def render(assigns) do
     ~H"""
-      <div class="mx-auto w-4/12 p-4 bg-white border rounded-lg shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700">
+      <div class="mx-auto lg:w-4/12 md:w-full sm:w-full p-4 bg-white border rounded-lg shadow-md sm:p-8 dark:bg-gray-800 dark:border-gray-700">
           <div class="flex items-center justify-between mb-4">
               <h5 class="mx-auto text-xl font-bold leading-none text-gray-900 dark:text-white">My Challenges</h5>
         </div>
@@ -31,7 +31,7 @@ defmodule TicTacToeWeb.PageLive.ChallengesList do
                       <% :pending -> %>
                         <a href="#" phx-click="join-challenge" phx-value-game-id={challenge.game_id} phx-value-challenge-id={challenge.id} class="items-center justify-center rounded-md border border-transparent bg-indigo-600 px-2 py-1 text-base font-medium text-white hover:bg-indigo-700 md:py-1 md:px-3 md:text-sm">Play</a>
                       <% {:finished, :draw} -> %>
-                        <span class="font-bold text-yellow-500">Draw</span>
+                        <span class="font-bold text-yellow-600">Draw</span>
                       <% {:finished, winner} -> %>
                         <%= if winner == @player.id do %>
                           <span class="font-bold text-green-600">Win</span>

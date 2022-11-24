@@ -1,10 +1,53 @@
-<span class="text-7xl p-3" phx-click="leave-game" data-confirm="Are you sure you want to leave the game?">←</span>
-<h1 class="mx-auto w-96 text-center mb-10 mt-5 text-5xl text-indigo-600"><%= TicTacToeWeb.GameView.game_status(assigns) %></h1>
 <% flattened_board = List.flatten(@game_session.board) %>
-<div class="grid grid-cols-3 grid-flow-row w-96 mx-auto">
-  <%= for idx <- 0..8 do %>
-    <div class="w-32 h-32 bg-gray-100 hover:bg-gray-200 text-7xl text-gray-600 font-bold pt-7 text-center border-white border-2" phx-click="maybe-select-cell" phx-value-x={rem(idx,3)} phx-value-y={div(idx,3)}>
-        <%= TicTacToeWeb.PageView.symbol_for_player(Enum.at(flattened_board, idx)) %>
-    </div>
-  <% end %>
+<% %{current_player: current_player, opponent: opponent, state: state} = TicTacToeWeb.GameView.game_status(assigns) %>
+
+<div>
+  <div class="grid grid-cols-1 w-96 mx-auto">
+    <span class="text-lg text-left p-3 pl-0 mb-10" phx-click="leave-game" data-confirm="Are you sure you want to leave the game?">← home</span>
+
+    <%= if @player.id == current_player.id do%>
+      <div class="animate-pulse"> &#10005; <b>You</b> </div>
+      <div> &#9711; <%= opponent.name %> </div>
+    <% else %>
+      <div>
+        &#10005; You
+      </div>
+      <div class="animate-pulse"> &#9711; <b><%= opponent.name %> </b></div>
+    <% end %>
+    
+  </div>
+
+  <div class="grid grid-cols-3 grid-flow-row w-96 mx-auto">
+    <%= if state == :finished do%>
+      <%= if @player.id != current_player.id do%>
+        <div class="flex bg-white/75 absolute w-96 h-96 text-center align-text-middle">
+          <span class="m-auto inline-block align-text-middle text-red-600 text-5xl font-bold">You <br /> Lose</span>
+        </div>
+      <% else %>
+        <div class="flex bg-white/75 absolute w-96 h-96 text-center align-text-middle">
+          <span class="m-auto inline-block align-text-middle text-green-600 text-5xl font-bold">You <br /> Win</span>
+        </div>
+      <% end %>
+    <% end %>
+
+    <%= if state == :draw do%>
+      <div class="flex bg-white/75 absolute w-96 h-96 text-center align-text-middle">
+        <span class="m-auto inline-block align-text-middle text-yellow-600 text-5xl font-bold">It's a <br/> Draw!</span>
+      </div>
+    <% end %>
+    
+    <%= for idx <- 0..8 do %>
+
+      <div 
+        class="flex aspect-square bg-gray-100 hover:bg-gray-200 text-7xl text-gray-600 font-bold pt-2 text-center border-white border-2" 
+        phx-click="maybe-select-cell" 
+        phx-value-x={rem(idx,3)} 
+        phx-value-y={div(idx,3)}>
+           <span class="m-auto">
+            <%= TicTacToeWeb.PageView.symbol_for_player(Enum.at(flattened_board, idx)) %>
+           </span>
+      </div>
+      
+    <% end %>
+  </div>
 </div>
